@@ -159,3 +159,50 @@ nacounts <- count_missing(customer_data)
 hasNA = which(nacounts > 0)
 nacounts[hasNA]
 
+varlist <- setdiff(colnames(customer_data), c("custid", "health_ins"))
+
+library(vtreat)
+
+treatment_plan <- design_missingness_treatment(customer_data, varlist = varlist)
+training_prepared <- prepare(treatment_plan, customer_data)
+
+colnames(customer_data)
+colnames(training_prepared)
+
+nacounts <- sapply(training_prepared, FUN = function(col) sum(is.na(col)))
+sum(nacounts)
+
+htmissing <- which(is.na(customer_data$housing_type))
+
+columns_to_look_at <- c("custid", "is_employed", "num_vehicles",
+"housing_type", "health_ins")
+
+customer_data[htmissing, columns_to_look_at] %>% head()
+
+columns_to_look_at <- c("custid", "is_employed", "is_employed_isBAD",
+"num_vehicles", "num_vehicles_isBAD",
+"housing_type", "health_ins")
+
+training_prepared[htmissing, columns_to_look_at] %>% head()
+
+customer_data %>%
+summarize(mean_vehicles = mean(num_vehicles, na.rm = TRUE),
+mean_employed = mean(as.numeric(is_employed), na.rm = TRUE))
+
+library(dplyr)
+median_income_table <- readRDS("median_income.RDS")
+head(median_income_table)
+
+training_prepared <- training_prepared %>% 
+left_join(., median_income_table, by = "state_of_res") %>%
+mutate(income_normalized = income/median_income)
+
+head(training_prepared[, c("income", "median_income", "income_normalized")])
+
+summary(training_prepared$income_normalized)
+
+summary(training_prepared$age)
+
+mean_age <- mean(training_prepared$age)
+age_normalized <- training_prepared$age/mean_age
+summary(age_normalized)
