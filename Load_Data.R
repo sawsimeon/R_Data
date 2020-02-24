@@ -206,3 +206,177 @@ summary(training_prepared$age)
 mean_age <- mean(training_prepared$age)
 age_normalized <- training_prepared$age/mean_age
 summary(age_normalized)
+
+(mean_age <- mean(training_prepared$age))
+
+(sd_age <- sd(training_prepared$age))
+
+print(mean_age + c(-sd_age, sd_age))
+
+training_prepared$scaled_age <- (training_prepared$age - mean_age) / sd_age
+
+training_prepared %>% filter(abs(age - mean_age) < sd_age) %>%
+select(age, scaled_age) %>%
+head()
+
+training_prepared %>%
+filter(abs(age - mean_age) > sd_age) %>%
+select(age, scaled_age) %>%
+head()
+
+dataf <- training_prepared[, c("age", "income", "num_vehicles", "gas_usage")]
+summary(dataf)
+
+dataf_scaled <- scale(dataf, center = TRUE, scale = TRUE)
+summary(dataf_scaled)
+
+(means <- attr(dataf_scaled, "scaled:center"))
+
+(sds <- attr(dataf_scaled, "scaled:scale"))
+
+newdata <- customer_data
+library(vtreat)
+newdata_treated <- prepare(treatment_plan, newdata)
+
+new_dataf <- newdata_treated[, c("age", "income", "num_vehicles", "gas_usage")]
+
+dataf_scaled <- scale(new_dataf, center= means, scale = sds)
+
+set.seed(25643)
+customer_data$gp <- runif(nrow(customer_data))
+customer_test <- subset(customer_data, gp <= 0.1)
+customer_train <- subset(customer_data, gp > 0.1)
+
+dim(customer_test)
+dim(customer_data)
+
+household_data <- readRDS("hhdata.RDS")
+hh <- unique(household_data$household_id)
+
+set.seed(243674)
+households <- data.frame(household_id = hh,
+gp = runif(length(hh)),
+stringsAsFactors = FALSE)
+
+household_data <- dplyr::left_join(household_data, households, by = "household_id")
+
+library(ggplot2)
+summary(iris)
+
+head(iris)
+
+ggplot(iris, aes(x = Petal.Length, y = Petal.Width,
+shape = Species, color = Species)) +
+geom_point(size = 2) +
+ggtitle("Petal dimensions by iris species: al measurements")
+
+columns_we_want <- c("Petal.Length", "Petal.Width", "Species")
+rows_we_want <- iris$Petal.Length > 2
+
+head(iris)
+
+iris_base <- iris[rows_we_want, columns_we_want, drop = FALSE]
+
+head(iris_base)
+
+library(data.table)
+
+iris_data.table <- as.data.table(iris)
+
+columns_we_want <- c("Petal.Length", "Petal.Width", "Species")
+rows_we_want <- iris_data.table$Petal.Length > 2
+
+iris_data.table <- iris_data.table[rows_we_want, ..columns_we_want]
+head(iris_data.table)
+
+library(dplyr)
+
+iris_dplyr <- iris %>%
+select(.,
+Petal.Length, Petal.Width, Species) %>%
+filter(.,
+Petal.Length > 2)
+
+head(iris_dplyr)
+
+library(ggplot2)
+data(msleep)
+
+str(msleep)
+summary(msleep)
+
+clean_base_1 <- msleep[complete.cases(msleep), , drop = FALSE]
+
+summary(clean_base_1)
+
+nrow(clean_base_1)
+
+clean_base_2 <- na.omit(msleep)
+nrow(clean_base_2)
+
+library(data.table)
+msleep_data.table <- as.data.table(msleep)
+
+clean_data.table = msleep_data.table[complete.cases(msleep_data.table), ]
+nrow(clean_data.table)
+
+library(dplyr)
+
+clean_dplyr <- msleep %>%
+filter(., complete.cases(.))
+
+nrow(clean_dplyr)
+## 154/568
+
+purchases <- wrapr::build_frame(
+    "day", "hour", "n_purchase" |
+    1, 9, 5 |
+    2, 9, 3 |
+    2, 11, 5 |
+    1, 13, 1 |
+    2, 13, 3 |
+    1, 14, 1 
+)
+
+order_index <- with(purchases, order(day, hour))
+
+purchases_ordered <- purchases[order_index , , drop = FALSE]
+purchases_ordered$running_total <- cumsum(purchases_ordered$n_purchase)
+
+purchases_ordered
+
+library("data.table")
+
+DT_purchases <- as.data.table(purchases)
+order_cols <- c("day", "hour")
+setorderv(DT_purchases, order_cols)
+DT_purchases[, running_total := cumsum(n_purchase)]
+print(DT_purchases)
+
+library(dplyr)
+
+res <- purchases %>%
+arrange(., day, hour) %>%
+mutate(., running_total = cumsum(n_purchase))
+
+print(res)
+
+order_indx <- with(purchases, order(day, hour))
+purchases_ordered <- purchases[order_index, , drop = FALSE]
+
+data_list <- split(purchases_ordered, purchases_ordered$day)
+
+data_list <- lapply(
+    data_list, 
+    function(di) {
+        di$running_total <- cumsum(di$n_purchase)
+        di
+    }
+)
+
+purchases_ordered <- do.call(base::rbind,  data_list)
+rownames(purchases_ordered) <- NULL
+
+purchases_ordered
+
+##158/568
