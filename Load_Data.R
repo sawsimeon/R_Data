@@ -138,3 +138,24 @@ ShadowHist(customer_data3, "age", "marital_status",
 ggplot(customer_data2, aes(x = age)) +
 geom_density() + facet_wrap(~marital_status)
 
+library(dplyr)
+customer_data = readRDS("custdata.RDS")
+
+customer_data <- customer_data %>%
+mutate(age = na_if(age, 0), 
+income = ifelse(income < 0, NA, income))
+
+customer_data <- customer_data %>%
+mutate(gas_with_rent = (gas_usage ==1),
+gas_with_electricity = (gas_usage ==2),
+no_gas_bill = (gas_usage ==3)) %>%
+mutate(gas_usage = ifelse(gas_usage < 4, NA, gas_usage))
+
+count_missing = function(df) {
+    sapply(df, FUN = function(col) sum(is.na(col)))
+}
+
+nacounts <- count_missing(customer_data)
+hasNA = which(nacounts > 0)
+nacounts[hasNA]
+
