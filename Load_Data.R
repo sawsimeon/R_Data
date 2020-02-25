@@ -379,4 +379,19 @@ rownames(purchases_ordered) <- NULL
 
 purchases_ordered
 
-##158/568
+library(datasets)
+library(ggplot2)
+summary(airquality)
+library(lubridate)
+library(ggplot2)
+
+datestr <- function(day, month, year) {
+    paste(day, month, year, sep = "-")
+}
+
+airquality_with_date <- airquality
+airquality_with_date$date <- with(airquality_with_date, 
+dmy(datestr(Day, Month, 1973)))
+
+airquality_with_date <- airquality_with_date[, c("Ozone", "date"), drop = FALSE]
+

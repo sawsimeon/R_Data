@@ -1,0 +1,1 @@
+{"datestr":{"class":["function"],"type":"closure","length":1,"str":"function (day, month, year)"},"airquality_with_date":{"class":["data.frame"],"type":"list","length":2,"str":"'data.frame':\t153 obs. of  2 variables:","names":["Ozone","date"]}}
