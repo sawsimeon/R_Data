@@ -777,6 +777,99 @@ confmat_spam[1, 1] / (confmat_spam[1, 1] + confmat_spam[1, 2])
 
 
 library(RCurl)
-x <- getURL("https://raw.githubusercontent.com/nature-of-code/NOC-S17-2-Intelligence-Learning/master/week3-classification-regression/05_linear_regression_data/crickets.csv")
+x <- getURL("https://raw.githubusercontent.com/WinVector/PDSwR2/2e6ab6ff703fa6e0a23a0ba0e33e3d0ec8f48ffc/cricketchirps/crickets.csv")
 crickets <- read.csv(text = x)
 
+cricket_model <- lm(temperatureF ~ chirp_rate, data = crickets)
+crickets$temp_pred <- predict(cricket_model, newdata = crickets)
+
+error_sq <- (crickets$temp_pred - crickets$temperatureF)^2
+
+(RMSE <- sqrt(mean(error_sq)))
+
+error_sq <- (crickets$temp_pred - crickets$temperatureF)^2
+numerator <- sum(error_sq)
+delta_sq <- (mean(crickets$temperatureF) - crickets$temperatureF)^2
+denominator = sum(delta_sq)
+
+(R2 <- 1 - numerator/denominator)
+
+library(WVPlots)
+DoubleDensityPlot(spamTest, xvar = "pred", truthVar = "spam",
+title = "Distribution of scores for spam filter")
+
+library(WVPlots)
+ROCPlot(spamTest, xvar = "pred",
+truthVar = "spam",
+truthTarget = "spam",
+title = "Spam filter test performance")
+
+library(sigr)
+calcAUC(spamTest$pred, spamTest$spam== 'spam')
+
+ylogpy <- function(y, py) {
+    logpy = ifelse(py > 0, log(py), 0)
+    y*logpy
+}
+
+y <- spamTest$spam == 'spam'
+
+sum(ylogpy(y, spamTest$pred) +
+ylogpy(1- y, 1-spamTest$pred))
+
+(pNull <- mean(spamTrain$spam == "spam"))
+
+sum(ylogpy(y, pNull) + ylogpy(1-y, 1-pNull))
+library(sigr)
+
+(deviance <- calcDeviance(spamTest$pred, spamTest$spam == 'spam'))
+
+(nullDeviance <- calcDeviance(pNull, spamTest$spam == 'spam'))
+
+(pseudoR2 <- 1 - deviance/nullDeviance)
+
+iris <- iris
+
+iris$class <- as.numeric(iris$Species == "setosa")
+
+set.seed(2345)
+
+intrain <- runif(nrow(iris)) < 0.75
+train <- iris[intrain, ]
+test <- iris[!intrain, ]
+
+head(train)
+
+
+
+fit_iris_example = function(variable_matrix, labelvec) {
+
+  cv = xgb.cv(variable_matrix, label = labelvec,
+              params=list(
+                objective="binary:logistic"
+              ),
+              nfold=5,
+              nrounds=100,
+              print_every_n=10,
+              metrics="logloss")
+
+  evalframe = as.data.frame(cv$evaluation_log)
+  NROUNDS = which.min(evalframe$test_logloss_mean)
+
+  model = xgboost(data=variable_matrix, label=labelvec,
+                  params=list(
+                    objective="binary:logistic"
+                  ),
+                  nrounds=NROUNDS,
+                  verbose=FALSE)
+
+  model
+}
+
+input <- as.matrix(train[, 1:4])
+model <- fit_iris_example(input, train$class)
+
+library(lime)
+explainer <- lime::lime(train[, 1:4],
+model = model,
+bin_continuous = TRUE, n_bins = 10)
