@@ -873,3 +873,20 @@ library(lime)
 explainer <- lime::lime(train[, 1:4],
 model = model,
 bin_continuous = TRUE, n_bins = 10)
+(example <- test[5, 1:4, drop = FALSE])
+test$class[5]
+round(predict(model, newdata = as.matrix(example)))
+
+explanation <- lime::explain(example,
+explainer, n_labels = 1, n_features = 4)
+
+plot_features(explanation)
+(exapmle <- test[c(13, 24), 1:4])
+
+test$class[c(13, 24)]
+
+round(predict(model, newdata = as.matrix(example)))
+
+explanation <- explain(example, explainer, n_labels = 1, n_features = 4, kernel_width = 0.5)
+
+plot_features(explanation)
