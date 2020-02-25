@@ -395,3 +395,388 @@ dmy(datestr(Day, Month, 1973)))
 
 airquality_with_date <- airquality_with_date[, c("Ozone", "date"), drop = FALSE]
 
+head(airquality_with_date)
+
+ggplot(airquality_with_date, aes(x = date, y = Ozone)) +
+geom_point() +
+geom_line() + 
+xlab("Date") +
+ggtitle("New York ozone reading, May 1 - Setp 30, 1973")
+
+library(wrapr)
+airquality %.>%
+transform(., date = dmy(datestr(Day, Month, 1973))) %.>%
+subset(., !is.na(Ozone), select = c("Ozone", "date")) %.>%
+head(.)
+
+library(data.table)
+
+DT_airquality <- as.data.table(airquality) [
+    , date := dmy(datestr(Day, Month, 1973))
+] [
+    , c("Ozone", "date")
+]
+
+head(DT_airquality)
+
+library(dplyr)
+
+airquality_with_date2 <- airquality %>%
+mutate(., date = dmy(datestr(Day, Month, 1973))) %>%
+select(., Ozone, date)
+
+head(airquality_with_date2)
+
+library(zoo)
+
+airquality_corrected <- airquality_with_date
+airquality_corrected$OzoneCorrected <- na.locf(airquality_corrected$Ozone, na.rm = FALSE)
+summary(airquality_corrected)
+
+ggplot(airquality_corrected, aes(x = date, y = Ozone)) +
+geom_point(aes(y = Ozone)) +
+geom_line(aes(y = OzoneCorrected)) +
+ggtitle("New York Ozone Reading, May 1 - Sept 30, 1973",
+subtitle = "(corrected)") + 
+xlab("Date")
+
+library(ggplot2)
+library(datasets)
+data(iris)
+head(iris)
+iris_summary <- aggregate(
+    cbind(Petal.Length, Petal.Width) ~ Species,
+    data = iris,
+    FUN = mean
+)
+print(iris_summary)
+
+library(ggplot2)
+ggplot(mapping = aes(x = Petal.Length, y = Petal.Width,
+shape = Species, color = Species)) +
+geom_point(data = iris,
+alpha = 0.5) +
+geom_point(data = iris_summary, size = 5) +
+ggtitle("Average Petal dimensions by iris species\n(with raw data for reference)")
+
+productTable <- wrapr::build_frame(
+"productID", "price" |
+"p1" , 9.99 |
+"p2" , 16.29 |
+"p3" , 19.99 |
+"p4" , 5.49 |
+"p5" , 24.49 )
+salesTable <- wrapr::build_frame(
+"productID", "sold_store", "sold_online" |
+"p1" , 6 , 64 |
+"p2" , 31 , 1 |
+"p3" , 30 , 23 |
+"p4" , 31 , 67 |
+"p5" , 43 , 51 )
+
+productTable2 <- wrapr::build_frame(
+"productID", "price" |
+"n1" , 25.49 |
+"n2" , 33.99 |
+"n3" , 17.99 )
+
+productTable$productID <- factor(productTable$productID)
+productTable2$productID <- factor(productTable2$productID)
+
+rbind_base = rbind(productTable, productTable2)
+
+str(rbind_base)
+library(data.table)
+
+rbindlist(list(productTable, 
+productTable2))
+
+library(dplyr)
+bind_rows(list(productTable, productTable2))
+
+productTable_marked <- productTable
+productTable_marked$table <- "productTable"
+productTable2_marked <- productTable2
+productTable2_marked$table <- "productTable2"
+
+rbind_base <- rbind(productTable_marked,
+productTable2_marked)
+
+rbind_base
+
+tables <- split(rbind_base, rbind_base$table)
+tables
+
+library(data.table)
+dt <- as.data.table(rbind_base)
+
+f <- function(.BY, .SD) {
+    max(.SD$price)
+}
+
+dt[, max_price := f(.BY, .SD), by = table]
+
+print(dt)
+
+library(data.table)
+
+dt <- as.data.table(rbind_base)
+grouping_column <- "table"
+dt[, max_price := max(price), by = eval(grouping_column)]
+
+print(dt)
+
+rbind_base %>%
+group_by(., table) %>%
+mutate(., max_price = max(price)) %>%
+ungroup(.)
+
+cbind(productTable, salesTable[, -1])
+library(data.table)
+cbind(as.data.table(productTable),
+as.data.table(salesTable[, -1]))
+
+productTable <- wrapr::build_frame(
+"productID", "price" |
+"p1" , 9.99 |
+"p3" , 19.99 |
+"p4" , 5.49 |
+"p5" , 24.49 )
+salesTable <- wrapr::build_frame(
+"productID", "unitsSold" |
+"p1" , 10 |
+"p2" , 43 |
+"p3" , 55 |
+"p4" , 8 )
+
+merge(productTable, salesTable, by = "productID", all.x = TRUE)
+
+library(data.table)
+
+productTable_data.table <- as.data.table(productTable)
+salesTable_data.table <- as.data.table(salesTable)
+
+#index notation for join
+#ideasis rows are produced fro each row insides the []
+salesTable_data.table[productTable_data.table, on = "productID"]
+
+merge(productTable, salesTable, by = "productID", all.x = TRUE)
+
+library(data.table)
+
+joined_table <- productTable
+joined_table$unitsSold <- salesTable$unitsSold[match(joined_table$productID, salesTable$productID)]
+print(joined_table)
+
+library(dplyr)
+
+left_join(productTable, salesTable, by  = "productID")
+
+merge(productTable, salesTable, by = "productID")
+
+library(data.table)
+
+productTable_data.table <- as.data.table(productTable)
+sales_Table_data.table <- as.data.table(salesTable)
+
+merge(productTable, salesTable, by = "productID")
+
+library(dplyr)
+inner_join(productTable, salesTable, by = "productID")
+
+merge(productTable, salesTable, by = "productID", all = TRUE)
+
+library(data.table)
+productTable_data.table <- as.data.table(productTable)
+salesTable_data.table <- as.data.table(salesTable)
+
+merge(productTable_data.table, salesTable_data.table, by = "productID", all = TRUE)
+
+library(dplyr)
+
+full_join(productTable, salesTable, by = "productID")
+
+library("data.table")
+quotes <- data.table(
+bid = c(5, 5, 7, 8),
+ask = c(6, 6, 8, 10),
+bid_quantity = c(100, 100, 100, 100),
+ask_quantity = c(100, 100, 100, 100),
+when = as.POSIXct(strptime(
+c("2018-10-18 1:03:17",
+"2018-10-18 2:12:23",
+"2018-10-18 2:15:00",
+"2018-10-18 2:17:51"),
+"%Y-%m-%d %H:%M:%S")))
+
+print(quotes)
+
+trades <- data.table(
+trade_id = c(32525, 32526),
+price = c(5.5, 9),
+quantity = c(100, 200),
+when = as.POSIXct(strptime(
+c("2018-10-18 2:13:42",
+"2018-10-18 2:19:20"),
+"%Y-%m-%d %H:%M:%S")))
+
+print(trades)
+
+quotes[, quote_time := when]
+trades[ , trade_time := when]
+quotes[ trades, on = "when", roll = TRUE] [
+    , .(quote_time, bid, price, ask, trade_id, trade_time)
+]
+
+library("datasets")
+library("xts")
+# move the date index into a column
+dates <- index(as.xts(time(Seatbelts)))
+Seatbelts <- data.frame(Seatbelts)
+Seatbelts$date <- dates
+# restrict down to 1982 and 1983
+
+Seatbelts <- Seatbelts[(Seatbelts$date >= as.yearmon("มี.ค. 1982")) &
+(Seatbelts$date <= as.yearmon("ธ.ค. 1983")), , drop = FALSE]
+
+Seatbelts$date <- as.Date(Seatbelts$date)
+# mark if the seatbelt law was in effect
+Seatbelts$law <- ifelse(Seatbelts$law == 1, "new law", "pre-law")
+# limit down to the columns we want
+Seatbelts <- Seatbelts[, c("date", "DriversKilled", "front", "rear", "law")]
+
+head(Seatbelts)
+
+library(datasets)
+library(data.table)
+library(ggplot2)
+
+ChickWeight <- data.frame(ChickWeight)
+ChickWeight$Diet <- NULL
+# pad names with zeros
+padz <- function(x, n=max(nchar(x))) gsub(" ", "0", formatC(x, width=n))
+# append "Chick" to the chick ids
+ChickWeight$Chick <- paste0("Chick", padz(as.character(ChickWeight$Chick)))
+head(ChickWeight)
+
+ChickSummary <- as.data.table(ChickWeight)
+ChickSummary <- ChickSummary[, .(count =  .N, weight = mean(weight),
+q1_weight = quantile(weight, probs = 0.25),
+q2_weight = quantile(weight, probs = 0.75)), by = Time]
+
+head(ChickSummary)
+
+library(ggplot2)
+
+ChickSummary <- cdata::unpivot_to_blocks(
+    ChickSummary, 
+    nameForNewKeyColumn = "measurement",
+    nameForNewValueColumn = "value",
+    columnsToTakeFrom = c("count", "weight")
+)
+
+ChickSummary$q1_weight[ChickSummary$measurement== "count"] <- NA
+ChickSummary$q2_weight[ChickSummary$measurement == "count"] <- NA
+CW <- ChickWeight
+CW$measurement <- "weight"
+
+ggplot(ChickSummary, aes(x = Time, y = value, color = measurement))  +
+geom_line(data = CW, aes(x = Time, y = weight, group = Chick), color = "LightGray") + 
+geom_line(size = 2) + 
+geom_ribbon(aes(ymin = q1_weight, ymax = q2_weight), alpha = 0.3, colour = NA) +
+facet_wrap(~measurement, ncol = 1, scales = "free_y") +
+theme(legend.position = "none") +
+ylab(NULL) + 
+ggtitle("Chick Weight and Count Measurements by Time",
+subtitle = "25% through 75% quantiles of weight shown shaded around mean")
+
+library(data.table)
+
+ChickWeight_wide2 <- dcast.data.table(
+    as.data.table(ChickWeight),
+    Chick ~ Time, 
+    value.var = "weight"
+)
+
+library("tidyr")
+
+ChickWeight_wide1 <- spread(ChickWeight, key = Time,
+value = weight)
+
+head(ChickWeight_wide1)
+
+library(RCurl)
+x <- getURL("https://raw.githubusercontent.com/WinVector/zmPDSwR/master/Spambase/spamD.tsv")
+spamD <- read.csv(text = x, sep = "\t")
+
+spamTrain <- subset(spamD, spamD$rgroup >= 10)
+spamTest <- subset(spamD, spamD$rgroup < 10)
+
+spamVars <- setdiff(colnames(spamD), list('rgroup', 'spam'))
+
+spamFormula <- as.formula(paste('spam == "spam"',
+paste(spamVars, collapse = ' + '), sep = ' ~ '))
+
+spamModel <- glm(spamFormula, family = binomial(link = 'logit'), 
+data = spamTrain)
+
+spamTrain$pred <- predict(spamModel, newdata = spamTrain, type = 'response')
+spamTest$pred <- predict(spamModel, newdata = spamTest, type = "response")
+
+sample <- spamTest[c(7, 35, 224, 327), c('spam', 'pred')]
+print(sample)
+
+confmat_spam <- table(truth = spamTest$spam,
+prediction = ifelse(spamTest$pred > 0.5,
+"spam", "non-spam"))
+print(confmat_spam)
+
+(confmat_spam[1,1] + confmat_spam[2,2]) / sum(confmat_spam)
+
+confmat_akismet <- as.table(matrix(data = c(288-1, 17, 1, 13882-17), nrow =2, ncol = 2))
+
+rownames(confmat_akismet) <- rownames(confmat_spam)
+colnames(confmat_akismet) <- colnames(confmat_spam)
+
+print(confmat_akismet)
+
+(confmat_akismet[1,1] + confmat_akismet[2,2]) / sum(confmat_akismet)
+
+confmat_spam[2,2] / (confmat_spam[2,2] + confmat_spam[1,2])
+
+confmat_akismet[2,2] / (confmat_akismet[2, 2] + confmat_akismet[1, 2])
+
+precision <- confmat_spam[2, 2] / (confmat_spam[2, 2] + confmat_spam[1, 2])
+recall <- confmat_spam[2, 2] / (confmat_spam[2, 2] + confmat_spam[2, 1])
+
+(F1 <- 2 * precision * recall / (precision + recall))
+
+set.seed(234641)
+N <- nrow(spamTest)
+pull_out_ix <- sample.int(N, 100, replace = FALSE)
+removed = spamTest[pull_out_ix, ]
+
+get_performance <- function(sTest) {
+    proportion <- mean(sTest$spam == "spam")
+    confmat_spam <- table(truth = sTest$spam, prediction = ifelse(sTest$pred > 0.5, "spam", "non-spam"))
+    precision <- confmat_spam[2, 2]/sum(confmat_spam[, 2])
+    recall <- confmat_spam[2, 2]/sum(confmat_spam[2,])
+    list(spam_proportion = proportion, 
+    confmat_spam = confmat_spam,
+    precision = precision, recall = recall)
+}
+
+sTest <- spamTest[-pull_out_ix, ]
+get_performance(sTest)
+
+get_performance(rbind(sTest, subset(removed, spam == "spam")))
+
+get_performance(rbind(sTest, subset(removed, spam == "non-spam")))
+
+confmat_spam[1, 1] / (confmat_spam[1, 1] + confmat_spam[1, 2])
+
+
+library(RCurl)
+x <- getURL("https://raw.githubusercontent.com/nature-of-code/NOC-S17-2-Intelligence-Learning/master/week3-classification-regression/05_linear_regression_data/crickets.csv")
+crickets <- read.csv(text = x)
+
