@@ -1,3 +1,5 @@
 {"time":"2020-02-24 09:43:49","pid":20104,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpGyeV00"} 
 {"time":"2020-02-25 11:10:36","pid":17776,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpA77KsX"} 
 {"time":"2020-02-26 09:46:54","pid":11060,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpkDvClc"} 
+{"time":"2020-02-26 10:51:32","pid":11060,"command":"webview","file":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpkDvClc\\viewhtml2b3470c46e1d/index.html","height":{},"viewColumn":"Two"} 
+{"time":"2020-02-26 10:54:40","pid":11060,"command":"webview","file":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpkDvClc\\viewhtml2b3446651fcd/index.html","height":{},"viewColumn":"Two"} 

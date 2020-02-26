@@ -997,3 +997,56 @@ fit_imdb_model <- function(dtm_train, labels) {
   model
 }
 
+vocab <- create_pruned_vocabulary(texts)
+dtm_train <- make_matrix(texts, vocab)
+model <- fit_imdb_model(dtm_train, labels)
+
+c(test_txt, test_labels) %<-% readRDS("IMDBtest.RDS")
+
+dtm_test <- make_matrix(test_txt, vocab)
+
+predicted <- predict(model, newdata = dtm_test)
+
+teframe <- data.frame(true_label = test_labels, pred = predicted)
+
+(cmat <- with(teframe, table(truth = true_label, pred = pred > 0.5)))
+
+sum(diag(cmat))/sum(cmat)
+
+library(WVPlots)
+DoubleDensityPlot(teframe, "pred", "true_label",
+"Distribution of test prediction scores")
+
+explainer <- lime(texts, model = model,
+preprocess = function(x) make_matrix(x, vocab))
+
+casename <- "test_19552";
+sample_case <- test_txt[casename]
+pred_prob <- predict(model, make_matrix(sample_case, vocab))
+list(text = sample_case, 
+label = test_labels[casename],
+prediction = round(pred_prob))
+
+explanation <- lime::explain(sample_case, explainer, n_labels = 1, n_features = 5)
+
+plot_features(explanation)
+
+plot_text_explanations(explanation)
+
+casenames <- c("test_12034", "test_10294")
+sample_cases <- test_txt[casenames]
+pred_probs <- predict(model, newdata = make_matrix(sample_cases, vocab))
+list(texts = sample_cases, 
+labels = test_labels[casenames],
+predictions = round(pred_probs))
+
+explanation <- lime::explain(sample_cases, explainer,
+n_labels = 1, n_features = 5)
+
+plot_features(explanation)
+
+plot_features(explanation)
+plot_text_explanations(explanation)
+
+predict(model, newdata = make_matrix(sample_cases[2], vocab))
+
