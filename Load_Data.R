@@ -1050,3 +1050,25 @@ plot_text_explanations(explanation)
 
 predict(model, newdata = make_matrix(sample_cases[2], vocab))
 
+psub <- readRDS("psub.RDS")
+
+set.seed(3454351)
+gp <- runif(nrow(psub))
+
+dtrain <- subset(psub, gp >= 0.5)
+dtest <- subset(psub, gp < 0.5)
+
+model <- lm(log10(PINCP) ~ AGEP + SEX + COW + SCHL, data = dtrain)
+
+dtest$predLogPINCP <- predict(model, newdata = dtest)
+dtrain$predLogPINCP <- predict(model, newdata = dtrain) 
+
+library(ggplot2)
+ggplot(data = dtest, aes(x = predLogPINCP, y = log10(PINCP))) +
+geom_point(alpha = 0.2, color = "darkgray") +
+geom_smooth(color = "darkblue") +
+geom_line(aes(x = log10(PINCP),
+y = log10(PINCP)),
+color = "blue", linetype = 2) +
+coord_cartesian(xlim = c(4, 5.25),
+ylim = c(3.5, 5.5))
