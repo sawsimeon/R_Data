@@ -1072,3 +1072,267 @@ y = log10(PINCP)),
 color = "blue", linetype = 2) +
 coord_cartesian(xlim = c(4, 5.25),
 ylim = c(3.5, 5.5))
+
+ggplot(data = dtest, aes( x= predLogPINCP, 
+y = predLogPINCP - log10(PINCP))) + 
+geom_point(alpha = 0.2, color = "darkgray") + 
+geom_smooth(color = "darkblue") + 
+ylab("residual error (prediction - actual)")
+
+rsq <- function(y, f) { 1 - sum((y - f)^2)/sum((y - mean(y))^2)}
+
+rsq(log10(dtrian$PINCP), dtrain$predLogPINCP)
+
+rsq(log10(dtest$PINCP), dtest$predLogPINCP)
+
+rmse <- function(y, f) { sqrt(mean((y-f)^2))}
+
+rmse(log10(dtrain$PINCP), dtrain$predLogPINCP)
+
+rmse(log10(dtest$PINCP), dtest$predLogPINCP)
+
+(resids_train <- summary(log10(dtrain$PINCP) -
+predict(model, newdata = dtrian)))
+
+(resids_test <- summary(log10(dtest$PINCP) -
+predict(model, newdata = dtest)))
+
+(df <- nrow(dtrain) - nrow(summary(model)$coefficients))
+
+(modelResidualError <- sqrt(sum(residuals(model)^2)/df))
+
+load("NatalRiskData.rData")
+train <- sdata[sdata$ORIGRANDGROUP <= 5, ]
+test <- sdata[sdata$ORIGRANDGROUP > 5, ]
+
+complications <- c("ULD_MECO", "ULD_PRECIP", 
+"ULD_BREECH")
+
+riskfactors <- c("URF_DIAB", "URF_CHYPER", "URF_PHYPER",
+"URF_ECLAM")
+y <- "atRisk"
+x <- c("PWGT","UPREVIS", "CIG_REC", "GESTREC3",
+"DPLURAL", complications, riskfactors)
+library(wrapr)
+fmla <- mk_formula(y, x)
+
+print(fmla)
+
+model <- glm(fmla, data = train, family = binomial(link = "logit"))
+
+train$pred <- predict(model, newdata = train, type = "response")
+test$pred <- predict(model, newdata = test, type = "response")
+
+sum(train$atRisk == TRUE)
+sum(train$pred)
+
+premature <- subset(train, GESTREC3 == "< 37 weeks")
+sum(premature$atRisk == TRUE)
+sum(premature$pred)
+
+library(WVPlots)
+DoubleDensityPlot(train, "pred", "atRisk",
+title = "Distribution of natality risk scores")
+
+library("WVPlots")
+library(ggplot2)
+plt <- PRTPlot(train, "pred", "atRisk", TRUE, 
+plotvars = c("enrichment", "recall"),
+thresholdrange = c(0, 0.05),
+title = "Enrichment/recall vs. threshold for natality mdoel")
+plt + geom_vline(xintercept = 0.02, color = "red", linetype = 2)
+
+(ctab.test <- table(pred = test$pred > 0.02, atRisk = test$atRisk))
+
+(precision <- ctab.test[2, 2]/ sum(ctab.test[2,]))
+
+(recall <- ctab.test[2, 2]/ sum(ctab.test[, 2]))
+
+(enrichment <- precision / mean(as.numeric(test$atRisk)))
+
+coefficients(model)
+
+loglikelihood <- function(y, py) {
+  sum(y * log(py) + (1-y) *log(1 - py))
+}
+
+(pnull <- mean(as.numeric(train$atRisk)))
+(null.dev <- -2 *loglikelihood(as.numeric(train$atRisk), pnull))
+
+(model$null.deviance)
+
+pred <- predict(model, newdata = train, type = "response")
+
+(resid.dev <- -2 * loglikelihood(as.numeric(train$atRisk), pred))
+
+model$deviance
+
+testy <- as.numeric(test$atRisk)
+testpred <- predict(model, newdata = test, type = "response")
+(pnull.test <- mean(testy))
+
+(null.dev.test <- -2 * loglikelihood(testy, pnull.test))
+
+(resid.dev.test <- -2 * loglikelihood(testy, testpred))
+
+pr2 <- 1 - (resid.dev/null.dev)
+print(pr2)
+
+pr2.test <- 1 - (resid.dev.test / null.dev.test)
+print(pr2.test)
+
+df.null = dim(train)[[1]] - 1
+
+df.model = dim(train)[[1]] - length(model$coefficients)
+
+(df.null <- dim(train)[[1]] - 1)
+(df.model <- dim(train)[[1]] - length(model$coefficients))
+
+(delDev <- null.dev - resid.dev)
+(deldf <- df.null - df.model)
+(p <- pchisq(delDev, deldf, lower.tail = FALSE))
+
+aic <- 2 * (length(model$coefficients) - 
+loglikelihood(as.numeric(train$atRisk), pred))
+aic
+
+
+library(RCurl)
+x <- getURL("https://raw.githubusercontent.com/WinVector/PDSwR2/master/UCICar/car.data.csv")
+cars <- read.csv(text = x)
+
+vars <- setdiff(colnames(cars), "rating")
+
+cars$fail <- cars$rating == "unacc"
+outcome <- "fail"
+set.seed(24351)
+gp <- runif(nrow(cars))
+
+library(zeallot)
+c(cars_test, cars_train) %<-% split(cars, gp < 0.7)
+
+nrow(cars_test)
+nrow(cars_train)
+
+library(wrapr)
+
+(fmla <- mk_formula(outcome, vars))
+
+model_glm <- glm(fmla, data = cars_train,
+family = binomial)
+
+summary(model_glm)
+
+coefs <- coef(model_glm)[-1]
+coef_frame <- data.frame(coef = names(coefs),
+value = coefs)
+
+library(ggplot2)
+ggplot(coef_frame, aes(x = coef, y = value)) +
+geom_pointrange(aes(ymin = 0, ymax = value)) +
+ggtitle("Coefficients of logistic regression model") +
+coord_flip()
+
+cars_test$pred_glm <- predict(model_glm, newdata = cars_test, type = "response")
+
+library(sigr)
+
+confmat <- function(dframe, predvar) {
+  cmat <- table(truth = ifelse(dframe$fail, "unacceptable", "passed"),
+  prediction = ifelse(dframe[[predvar]] > 0.5,
+  "unacceptable", "passed"))
+  accuracy <- sum(diag(cmat)) / sum(cmat)
+  deviance <- calcDeviance(dframe[[predvar]], dframe$fail)
+  list(confusion_matrix = cmat, 
+  accuracy = accuracy, 
+  deviance = deviance)
+}
+
+confmat(cars_test, "pred_glm")
+
+library(glmnet)
+library(glmnetUtils)
+
+(model_ridge <- cv.glmnet(formula = fmla, 
+data = cars_train, alpha = 0,   
+family = "binomial"))
+(coefs <- coef(model_ridge))
+
+coef_frame <- data.frame(coef = rownames(coefs)[-1],
+value = coefs[-1, 1])
+
+ggplot(coef_frame, aes(x = coef, y = value)) +
+geom_pointrange(aes(ymin = 0, ymax= value)) +
+ggtitle("Coefficients of ridge model") +
+coord_flip()
+
+prediction <- predict(model_ridge, newdata = cars_test,
+type = "response")
+
+cars_test$pred_ridge <- as.numeric(prediction)
+
+confmat(cars_test, "pred_ridge")
+
+prediction <- predict(model_ridge, 
+newdata = cars_test, type = "response",
+s = model_ridge$lambda.min)
+
+(elastic_net <- cva.glmnet(fmla, cars_train, family = "binomial"))
+
+get_cvm <- function(model) {
+  index <- match(model$lambda.1se, model$lambda)
+  model$cvm[index]
+}
+
+enet_performance <- data.frame(alpha = elastic_net$alpha)
+models <- elastic_net$modlist
+enet_performance$cvm <- vapply(models, get_cvm, numeric(1))
+
+minix <- which.min(enet_performance$cvm)
+
+(best_alpha <- elastic_net$alpha[minix])
+
+ggplot(enet_performance, aes(x = alpha, y = cvm)) +
+geom_point() + 
+geom_line() + 
+geom_vline(xintercept = best_alpha, color = "red", linetype = 2) +
+ggtitle("CV loss as a function of alpha")
+
+(model_enet <- cv.glmnet(fmla, cars_train,
+alpha = best_alpha, family = "binomial"))
+
+prediction <- predict(model_enet, newdata = cars_test, type = "response")
+
+cars_test$pred_enet <- as.numeric(prediction)
+
+confmat(cars_test, "pred_enet")
+
+
+d <- read.table("orange_small_train.data.gz", 
+header = TRUE, sep = "\t", na.strings = c("NA", ''))
+
+library(RCurl)
+x <- getURL("https://raw.githubusercontent.com/WinVector/PDSwR2/master/KDD2009/orange_small_train_churn.labels.txt")
+churn <- read.table(text = x, header = FALSE, sep = "\t")
+set.seed(729375)
+rgroup <- base::sample(c("train", "calibrate", "test"),
+nrow(d),
+prob = c(0.8, 0.1, 0.1),
+replace = TRUE)
+dTrain <- d[rgroup == 'train', , drop = FALSE]
+dCal <- d[rgroup == 'calibrate', , drop = FALSE]
+dTrainAll <- d[rgroup %in% c('train', 'calibrate'), , drop = FALSE]
+dTest <- d[rgroup == 'test', , drop = FALSE]
+
+outcome <- 'churn'
+vars <- setdiff(colnames(dTrainAll), outcome)
+
+rm(list = c('d', 'churn', 'rgroup'))
+
+load("KDD2009.Rdata")
+outcome_summary <- table(
+  churn = dTrain[, outcome],
+  useNA = 'ifany'
+)
+
+##  310/ 568
