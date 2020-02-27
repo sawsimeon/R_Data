@@ -1335,4 +1335,85 @@ outcome_summary <- table(
   useNA = 'ifany'
 )
 
+library(wrapr)
+
+outcome <- "churn"
+vars <- setdiff(colnames(dTrainAll), outcome)
+
+formula1 <- mk_formula("churn", vars, outcome_target = 1)
+model1 <- glm(formula1, data = dTrainAll, family = binomial)
+model2 <- glm((churn == 1) ~ Var1, data = dTrainAll, family = binomial)
+summary(model2)
 ##  310/ 568
+library(wrapr)
+oucome <- 'chrun'
+var <- setdiff(colnames(dTrainAll), outcome)
+formula1 <- mk_formula("churn", vars, outcome_target = 1)
+model1 <- glm(formula1, data = dTrainAll, family = binomial)
+
+model2 <- glm((churn ==1)) ~ Var1, data = dTrainAll, family = binomial)
+summary(model2)
+
+dim(dTrainAll)
+
+head(dTrainAll$VAr200)
+
+length(unique(dTrainAll$Var200))
+
+library(vtreat)
+
+(parallel_cluster <- parallel::makeCluster(parallel::detectCores()))
+
+treatment_plan <- vtreat::designTreatmentsC(
+  dTrain,
+  varlist = vars,
+  outcomename = "churn",
+  outcometarget = 1,
+  verbose = FALSE,
+  parallelCluster = parallel_cluster
+)
+library(vtreat)
+dTrain_treated <- prepare(treatment_plan, dTrain, 
+parallelCluster = parallel_cluster)
+head(colnames(dTrain))
+head(colnames(dTrain_treated))
+
+score_frame <- treatment_plan$scoreFrame
+t(subset(score_frame, origName %in% c("Var126", "Var189")))
+
+t(subset(score_frame, origName == "Var218"))
+
+comparison <- data.frame(original218 = dTrain$Var218,
+impact218 = dTrain_treated$Var218_catB)
+
+head(comparison)
+
+treatment_plan_2 <- design_missingness_treatment(dTrain, varlist = vars)
+dtrain_2 <- prepare(treatment_plan_2, dTrain)
+head(dtrain_2$Var218)
+
+model <- glm(churn ==1 ~ Var218, data = dtrain_2,
+family = "binomial")
+
+pred <- predict(model, newdata = dtrain_2, 
+type  = "response")
+
+(prevalence <- mean(dTrain$churn == 1))
+
+logit <- function(p) {
+  log(p/(1-p))
+}
+
+comparison$glm218 <- logit(pred) - logit(prevalence)
+
+head(comparison)
+
+score_frame[score_frame$origName == "Var200", , drop = FALSE]
+
+dCal_treated <- prepare(treatment_plan,
+dCal,
+parallelCluster = parallel_cluster)
+
+library(sigr)
+
+calcAUC(dTrain_treated$Var200_catB, dTrain_treated$churn)
