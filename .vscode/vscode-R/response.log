@@ -5,3 +5,6 @@
 {"time":"2020-02-26 10:54:40","pid":11060,"command":"webview","file":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpkDvClc\\viewhtml2b3446651fcd/index.html","height":{},"viewColumn":"Two"} 
 {"time":"2020-02-26 16:39:47","pid":11060,"command":"browser","url":"http://127.0.0.1:31460/library/glmnet/html/cv.glmnet.html"} 
 {"time":"2020-02-27 09:46:09","pid":17872,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\Rtmp0apUfQ"} 
+{"time":"2020-02-28 11:02:44","pid":14700,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpmiKaYk"}  
+
+{"time":"2020-02-28 11:04:52","pid":23416,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpUrp0dN"} 

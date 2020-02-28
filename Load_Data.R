@@ -1417,3 +1417,210 @@ parallelCluster = parallel_cluster)
 library(sigr)
 
 calcAUC(dTrain_treated$Var200_catB, dTrain_treated$churn)
+
+calcAUC(dCal_treated$Var200_catB, dCal_treated$churn)
+
+library(vtreat)
+
+parallel_cluster <- parallel::makeCluster(parallel::detectCores())
+
+cross_frame_experiment <- vtreat::mkCrossFrameCExperiment(
+  dTrainAll,
+  varlist = vars,
+  outcomename = "churn",
+  outcometarget = 1,
+  verbose = FALSE,
+  parallelCluster = parallel_cluster
+)
+
+dTrainAll_treated <- cross_frame_experiment$crossFrame
+treatment_plan <- cross_frame_experiment$treatments
+score_frame <- treatment_plan$scoreFrame
+
+dTest_treated <- prepare(treatment_plan, dTest,
+parallelCluster = parallel_cluster)
+library(sigr)
+calcAUC(dTrainAll_treated$Var200_catB, dTrainAll_treated$churn)
+calcAUC(dTest_treated$Var200_catB, dTest_treated$churn)
+k <- 1
+(significance_cutoff <- k / nrow(score_frame))
+score_frame$selected <- score_frame$sig <- significance_cutoff
+
+suppressPackageStartupMessages(library(dplyr))
+
+score_frame %>%
+group_by(., code, selected) %>%
+summarize(., count = n()) %>%
+ungroup(.) %>%
+cdata::pivot_to_rowrecs(.,
+columnToTakeKeysFrom = "selected",
+columnToTakeValuesFrom = "count",
+rowKeyColumns = "code", 
+sep = "=")
+
+library(wrapr)
+newvars <- score_frame$varName[score_frame$selected]
+
+f <- mk_formula("churn", newvars, outcome_target = 1)
+model <- glm(f, data = dTrainAll_treated, family = binomial)
+
+library(sigr)
+
+dTest_treated$glm_pred <- predict(model, newdata = dTest_treated, type = "response")
+
+calcAUC(dTest_treated$glm_pred, dTest_treated$churn == 1)
+
+permTestAUC(dTest_treated, "glm_pred", "churn", yTarget = 1)
+
+var_aucs <- vapply(newvars, function(vi) {
+  calcAUC(dTrainAll_treated[[vi]], dTrainAll_treated$churn == 1)
+}, numeric(1))
+
+(test_train_aucs <- var_aucs[var_aucs >= max(var_aucs)])
+
+table(prediction = dTest_treated$glm_pred >= 0.5,
+truth = dTest$churn)
+
+table(prediction = dTest_treated$glm_pred>0.15,
+truth = dTest$churn)
+
+auto_mpg <- readRDS("auto_mpg.RDS")
+library(wrapr)
+vars <- c("cylinders", "displacement", 
+"horsepower", "weight", "acceleration",
+"model_year", "origin")
+f <- mk_formula("mpg", vars)
+model <- lm(f, data = auto_mpg)
+auto_mpg$prediction <- predict(model, newdata = auto_mpg)
+
+str(auto_mpg[!complete.cases(auto_mpg), , drop = FALSE])
+library(vtreat)
+cfe <- mkCrossFrameNExperiment(auto_mpg, vars, "mpg", verbose = FALSE)
+treatment_plan <- cfe$treatments
+auto_mpg_treated <- cfe$crossFrame
+score_frame <- treatment_plan$scoreFrame
+new_vars <- score_frame$varName
+
+newf <- mk_formula("mpg", new_vars)
+new_model <- lm(newf, data = auto_mpg_treated)
+auto_mpg$prediction <- predict(new_model, newdata = auto_mpg_treated)
+str(auto_mpg[!complete.cases(auto_mpg), , drop = FALSE])
+library(wrapr)
+
+d <- build_frame(
+"x1" , "x2" , "x3", "y" |
+1 , "a" , 6 , 10 |
+NA_real_, "b" , 7 , 20 |
+3 , NA_character_, 8 , 30 )
+
+d <- build_frame(
+"x1" , "x2" , "x3", "y" |
+1 , "a" , 6 , 10 |
+NA_real_, "b" , 7 , 20 |
+3 , NA_character_, 8 , 30 )
+
+print(d)
+plan2 <- vtreat::designTreatmentsZ(d, varlist = c("x1", "x2", "x3"), verbose = FALSE)
+vtreat::prepare(plan2, d)
+
+d <- build_frame(
+"x1" , "x2" , "x3", "y" |
+1 , "a" , 6 , 10 |
+NA_real_, "b" , 7 , 20 |
+3 , NA_character_, 8 , 30 )
+
+print(d)
+
+plan3 <- vtreat::designTreatmentsN(d, varlist = c("x1", "x2", "x3"),
+outcomename = "y", codeRestriction = "catN", verbose = FALSE)
+vtreat::prepare(plan3, d)
+
+plan4 <- vtreat::designTreatmentsC(d, varlist = c("x1", "x2", "x3"),
+outcomename = "y",
+outcometarget = 20, 
+codeRestriction = "catB", 
+verbose = FALSE)
+
+vtreat::prepare(plan4, d)
+class(plan4)
+names(plan4)
+plan4$scoreFrame
+
+set.seed(2019)
+
+d <- data.frame(
+  x_bad = sample(letters, 100, replace = TRUE),
+  y = rnorm(100),
+  stringsAsFactors = FALSE
+)
+
+d$x_good <- ifelse(d$y > rnorm(100), "non-neg", "neg")
+
+head(d)
+
+plan5 <- vtreat::designTreatmentsN(d, 
+varlist = c("x_bad", "x_good"), 
+outcomename = "y", 
+codeRestriction = "catN",
+minFraction = 2,
+verbose = FALSE)
+
+class(plan5)
+
+print(plan5)
+training_data1 <- vtreat::prepare(plan5, d)
+
+cfe <- vtreat::mkCrossFrameNExperiment(d, 
+varlist = c("x_bad", "x_good"),
+outcomename = "y", 
+codeRestriction = "catN", 
+minFraction = 2, 
+verbose = FALSE)
+
+plan6 <- cfe$treatments
+training_data2 <- cfe$crossFrame
+
+res2 <- vtreat::patch_columns_into_frame(d, training_data2)
+head(res2)
+
+sigr::wrapFTest(res2, "x_bad_catN", "y")
+
+sigr::wrapFTest(res2, "x_good_catN", "y")
+
+plan6$scoreFrame
+
+library(RCurl)
+x <- getURL("https://raw.githubusercontent.com/WinVector/PDSwR2/master/Protein/protein.txt")
+protein <- read.csv(text = x, sep = "\t", header = TRUE)
+summary(protein)
+
+vars_to_use <- colnames(protein)[-1]
+pmatrix <- scale(protein[, vars_to_use])
+pcenter <- attr(pmatrix, "scaled:center")
+pscale <- attr(pmatrix, "scaled:scale")
+
+rm_scales <- function(scaled_matrix) {
+  attr(scaled_matrix, "scaled:center") <- NULL
+  attr(scaled_matrix, "scaled:scale") <- NULL
+  scaled_matrix
+}
+
+pmatrix <- rm_scales(pmatrix)
+distmat <- dist(pmatrix, method = "euclidean")
+pfit <- hclust(distmat, method = "ward.D")
+plot(pfit, labels = protein$Country)
+rect.hclust(pfit, k = 5)
+groups <- cutree(pfit, k = 5)
+
+print_clusters <- function(data, groups, columns) {
+  groupedD <- split(data, groups)
+  lapply(groupedD,
+  function(df) df[, columns])
+}
+
+cols_to_print <- wrapr::qc(Country, RedMeat, Fish, Fr.Veg)
+print_clusters(protein, groups, cols_to_print)
+
+library(ggplot2)
+princ <- prcomp(pmatrix)
+nComp <- 2
