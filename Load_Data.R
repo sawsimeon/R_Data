@@ -1624,3 +1624,184 @@ print_clusters(protein, groups, cols_to_print)
 library(ggplot2)
 princ <- prcomp(pmatrix)
 nComp <- 2
+project <- predict(princ, pmatrix)[, 1:nComp]
+project_plus <- cbind(as.data.frame(project),
+cluster = as.factor(groups),
+country = protein$Country)
+
+ggplot(project_plus, aes(x = PC1, y = PC2)) +
+geom_point(data = as.data.frame(project), color = "darkgrey") +
+geom_point() + geom_text(aes(label = country),
+hjust = 0, vjust = 1) + 
+facet_wrap(~cluster, ncol = 3, labeller = label_both)
+
+library(fpc)
+kbest_p <- 5
+cboot_hclust <- clusterboot(pmatrix, 
+clustermethod = hclustCBI,
+method = "ward.D", k = kbest_p)
+
+summary(cboot_hclust$result)
+
+groups <- cboot_hclust$result$partition
+print_clusters(protein, groups, cols_to_print)
+
+cboot_hclust$bootmean
+cboot_hclust$bootbrd
+
+sqr_edist <- function(x, y) {
+  sum((x - y)^2)
+}
+
+wss_cluster <- function(clustermat) {
+  c0 <- colMeans(clustermat)
+  sum(apply(clustermat, 1, FUN = function(row) {sqr_edist(row, c0)}))
+}
+
+wss_total <- function(dmatrix, labels) {
+  wsstot  <- 0
+  k <- length(unique(labels))
+  for (i in 1:k)
+  wsstot <- wsstot + wss_cluster(subset(dmatrix, labels == i))
+  wsstot
+}
+
+wss_total(pmatrix, groups)
+
+get_wss <- function(dmatrix, max_clusters) {
+  wss = numeric(max_clusters)
+}
+
+wss[1] <- wss_cluster(pmatrix)
+
+kbest_p <- 5
+pclusters <- kmeans(pmatrix, kbest_p, nstart = 100,
+iter.max = 100)
+summary(pclusters)
+pclusters$centers
+
+pclusters$size
+groups <- pclusters$cluster
+cols_to_print <- wrapr::qc(Country, RedMeat, Fish, Fr.Veg)
+print_clusters(protein, groups, cols_to_print)
+
+clustering_ch <- kmeansruns(pmatrix, krange = 1:10,
+criterion = "ch")
+clustering_ch$bestk
+
+clustering_asw <- kmeansruns(pmatrix, krange = 1:10, criterion = "asw")
+clustering_asw$bestk
+
+clustering_asw$crit
+clustering_ch$crit
+clustering_meas$ch_crit
+
+library(arules)
+bookbaskets <- read.transactions("bookdata.tsv.gz",
+format = "single",
+header = TRUE,
+sep = "\t",
+cols = c("userid", "title"),
+rm.duplicates = TRUE)
+
+class(bookbaskets)
+bookbaskets
+dim(bookbaskets)
+colnames(bookbaskets)[1:5]
+rownames(bookbaskets)[1:5]
+basketSizes <- size(bookbaskets)
+summary(basketSizes)
+
+quantile(basketSizes, probs = seq(0, 1, 0.1)) 
+library(ggplot2)
+ggplot(data.frame(count = basketSizes)) + 
+geom_density(aes(x = count)) +
+scale_x_log10()
+
+bookCount <- itemFrequency(bookbaskets, "absolute")
+
+summary(bookCount)
+
+orderedBooks <- sort(bookCount, decreasing = TRUE)
+knitr::kable(orderedBooks[1:10])
+
+orderedBooks[1] / nrow(bookbaskets)
+
+bookbaskets_use <- bookbaskets[basketSizes > 1]
+dim(bookbaskets_use)
+
+rules <- apriori(bookbaskets_use, 
+parameter = list(support = 0.002, confidence = 0.75))
+
+summary(rules)
+
+measures <- interestMeasure(rules, measure = c("coverage", "fishersExactTest"),
+transactions = bookbaskets_use)
+
+summary(measures)
+
+library(magrittr)
+
+rules %>%
+sort(., by = "confidence") %>%
+head(., n = 5) %>%
+inspect(.)
+
+brules <- apriori(bookbaskets_use,
+parameter = list(support = 0.001, 
+confidence = 0.6), 
+appearance = list(rhs = c("The Lovely Bones: A Novel"),
+default = "1hs"))
+
+library(RCurl)
+x <- getURL("https://raw.githubusercontent.com/WinVector/PDSwR2/master/Spambase/spamD.tsv")
+spamD <- read.csv(text = x, header = TRUE, sep = "\t")
+spamD$isSpam <- spamD$spam == "spam"
+spamTrain <- subset(spamD, spamD$rgroup >= 10)
+spamTest <- subset(spamD, spamD$rgroup < 10)
+spamVars <- setdiff(colnames(spamD), list('rgroup', 'spam', 'isSpam'))
+
+library(wrapr)
+spamFormula <- mk_formula('isSpam', spamVars)
+
+loglikelihood <- function(y, py) {
+  pysmooth <- ifelse(py == 0, 1e-12,
+  ifelse(py == 1, 1 - 1e-12, py))
+  sum(y * log(pysmooth) + (1 - y) * log(1 - pysmooth))
+}
+
+accuracyMeasures <- function(pred, truth, name = "model") {
+  dev.norm <- -2 * loglikelihood(as.numeric(truth), pred) / length(pred)
+  ctable <- table(truth = truth, pred = (pred > 0.5))
+  accuracy <- sum(diag(ctable)) / sum(ctable)
+  precision <- ctable[2, 2] / sum(ctable[, 2])
+  recall <- ctable[2, 2] / sum(ctable[2, ])
+  f1 <- 2 * precision * recall / (precision + recall)
+  data.frame(model = name, accracy = accuracy, f1 = f1, dev.norm)
+}
+
+library(rpart)
+
+treemodel <- rpart(spamFormula, spamTrain, method = "class")
+library(rpart.plot)
+rpart.plot(treemodel, type = 5, extra = 6)
+predTrain <- predict(treemodel, newdata= spamTrain)[, 2]
+trainperf_tree <- accuracyMeasures(predTrain, spamTrain$spam == "spam", name = "tree, Training")
+
+library(randomForest)
+lst <- readRDS("thRS500.RDS")
+varslist <- lst$varlist
+fmodel <- lst$model
+buzztest <- lst$buzztest
+rm(list = "lst")
+function(d) {
+  predict(fmodel, newdata = d, type = "prob")
+}
+
+library(plumber)
+r <- plumb("plumber.R")
+r$run(port=8000)
+
+
+
+
