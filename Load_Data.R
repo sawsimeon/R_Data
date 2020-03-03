@@ -1805,5 +1805,15 @@ r$run(port=8000)
 
 library(plumber)
 
+url <- "https://www.google.com/search?sa=X&biw=852&bih=558&q=PTG+gas+station&npsic=0&rflfq=1&rlha=0&rllag=13757509,100573530,13384&tbm=lcl&ved=2ahUKEwi837Se6v3nAhUSA3IKHT9dBjUQjGp6BAgLEDg&tbs=lrf:!1m5!1u8!2m3!8m2!1u8050!3e1!1m4!1u3!2m2!3m1!1e1!2m4!1e17!4m2!17m1!1e2!2m1!1e3!3sIAE,lf:1,lf_ui:3&rldoc=1#rlfi=hd:;si:;mv:[[14.370161099999999,100.7780215],[13.499176199999999,100.185136]];start:20;tbs:lrf:!1m4!1u3!2m2!3m1!1e1!2m1!1e3!2m4!1e17!4m2!17m1!1e2!3sIAE,lf:1,lf_ui:3"
+url <- "https://www.google.com/search?sa=X&biw=852&bih=558&q=PTG+gas+station&npsic=0&rflfq=1&rlha=0&rllag=13757509,100573530,13384&tbm=lcl&ved=2ahUKEwi837Se6v3nAhUSA3IKHT9dBjUQjGp6BAgLEDg&tbs=lrf:!1m5!1u8!2m3!8m2!1u8050!3e1!1m4!1u3!2m2!3m1!1e1!2m4!1e17!4m2!17m1!1e2!2m1!1e3!3sIAE,lf:1,lf_ui:3&rldoc=1#rlfi=hd:;si:;mv:[[13.917875299999999,100.7112169],[13.613467,100.34524449999999]];tbs:lrf:!1m4!1u3!2m2!3m1!1e1!2m1!1e3!2m4!1e17!4m2!17m1!1e2!3sIAE,lf:1,lf_ui:3"
 
+### Get Table from html
+
+library(rvest)
+
+zip_code <- read_html("https://en.youbianku.com/Thailand")
+html_code <- html_nodes(zip_code)
+html_table <- html_table(html_code)
+html_table[2][[1]]
 
