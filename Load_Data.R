@@ -1844,5 +1844,10 @@ coordenadas <- c(13.33554, 99.21360)
 
 encontrar(lugar = coordenadas, radius = 500, keyword = "PT")
 
-
-
+library(googleway)
+df <- read.csv("C:/Users/Saw/Downloads/df_gas_station_1430_2905.csv", encoding = "UTF-8")
+df <- df[!duplicated(df), ]
+set_key("AIzaSyDBGU6IIgNgygSzGwBdpYORn5OXYnBQ6JM")
+google_map() %>% add_circles(data = df, lon = "long", lat = "lat")
+iconUrl <- paste0("https://developers.google.com/maps/documentation/",
+"javascript/examples/full/images/beachflag.png")

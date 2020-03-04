@@ -16,3 +16,4 @@
 {"time":"2020-03-03 17:19:22","pid":12580,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\Rtmp8ERbAV"} 
 {"time":"2020-03-04 09:19:24","pid":23388,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\Rtmp8oLVok"} 
 {"time":"2020-03-04 09:19:24","pid":11892,"command":"attach","tempdir":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpwzELkT"} 
+{"time":"2020-03-04 14:17:51","pid":11892,"command":"webview","file":"C:\\Users\\Saw\\AppData\\Local\\Temp\\RtmpwzELkT\\viewhtml2e74277d844/index.html","height":{},"viewColumn":"Two"} 
