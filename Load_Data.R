@@ -1817,3 +1817,32 @@ html_code <- html_nodes(zip_code)
 html_table <- html_table(html_code)
 html_table[2][[1]]
 
+library(ggmap)
+library(maps)
+library(mapdata)
+library(jsonlite)
+w2hr <- map_data("world2Hires")
+thailand <- subset(w2hr, region == "Thailand")
+
+encontrar <- function(lugar, radius, keyword) {
+  # radius in meter
+  coor <- paste(lugar[1], lugar[2], sep = ",")
+  baseurl <- "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
+  google_key <- c("API_Key")
+  q <- paste(baseurl, "location=", coor, "&radius=", radius, "&types=Gas+stations&keyword=", keyword, "&key=", google_key, sep = "")
+  print(q)
+  data1 <-  fromJSON(q)
+  lat_long <- data.frame(lat = data1$results$geometry$location$lat, 
+  long = data1$results$geometry$location$lng)
+  sitios <- data1$results$name
+  result <- cbind(sitios, lat_long)
+  return(result)
+
+}
+
+coordenadas <- c(13.33554, 99.21360)
+
+encontrar(lugar = coordenadas, radius = 500, keyword = "PT")
+
+
+
