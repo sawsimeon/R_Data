@@ -605,3 +605,7 @@ library(keras)
      include_top = FALSE,
      input_shape = c(150, 150, 3)
  )
+
+ ### 140/341
+ library(keras)
+ model <- load_model_hdf5("cats_and_dogs_small_2.h5")
