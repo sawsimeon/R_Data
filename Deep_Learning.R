@@ -670,5 +670,7 @@ model <- application_vgg16(
     weights = "imagenet",
     include_top = FALSE
 )
+library(keras)
+model <- load_model_hdf5("vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5")
 
 ### page of 159 / 341
