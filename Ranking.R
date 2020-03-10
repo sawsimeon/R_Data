@@ -9,3 +9,11 @@ result <- clValid(express, 5, clMethods = c("hierarchical", "fanny", "model",
 "stability"))
 res <- result
 BruteAggreg(res$ranks, 9, res$weights, "Spearman")
+
+data(geneLists)
+top25CE <- RankAggreg(geneLists, 25, seed = 100, rho = .01)
+
+top25CEw <- RankAggreg(geneLists, 25, seed = 100, importance = c(1, 2, 1, 1, 2), rho = .01)
+
+top25GA <- RankAggreg(geneLists, 25, seed = 100, method = "GA", maxIter = 3000, convIn = 50)
+

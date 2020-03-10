@@ -63,3 +63,16 @@ ggplot() + geom_polygon(data = thailand, aes(x = long, y = lat, group = group), 
     legend.position = "none"
     
   )
+
+
+  ### Gas Station Geo Coding
+
+  library(rvest)
+  library(XML)
+  library(rlist)
+  url <- c("C:/Users/Saw/Downloads/PTT_MAP_Central.html")
+  x <- readHTMLTable(url, encoding = "UTF-8", trim = TRUE)
+  tables <- list.clean(x, fun = is.null, recursive = TRUE)
+  typeof(tables)
+  n.rows <- unlist(lapply(tables, function(t) dim(t)[1]))
+tables[[which.max(n.rows)]]
