@@ -76,3 +76,27 @@ ggplot() + geom_polygon(data = thailand, aes(x = long, y = lat, group = group), 
   typeof(tables)
   n.rows <- unlist(lapply(tables, function(t) dim(t)[1]))
 tables[[which.max(n.rows)]]
+
+### Gas Station Geo Location of Caltex
+library(rvest)
+url <- c("C:/Users/Saw/Downloads/Caltex.html")
+webpage <- read_html(url, encoding = "UTF-8") %>%
+html_nodes(".station-item") %>% html_text()
+
+### Gas Station Geo Location of Shell 10330
+library(rvest)
+url <- c("C:/Users/Saw/Downloads/Shell_10330_Thailand.html")
+read_html(url, encoding = "UTF-8") %>%
+html_nodes(".iframed-app__iframe") %>% html_text()
+
+
+#### Thailand Gas Station Company 
+### PTT, ESSO, Bangchak, Shell, Chevron, IRPC, Thaioil, Susco, PTG and others
+### PTT Public Company Limited (PTT)
+### Thai Oil Public Company Limited (Thai Oil)
+### Esso (Thailand) Public Company Limited (Esso)
+### Shell (Thailand) Co., Ltd. (Shell)
+### Bangchak Petroleum Public Company Limited (Bangchak)
+### IRPC Public Company Limited (IRPC)
+### PTG Energy Pulic Company Limited (PTG)
+### Susco Public Company Limited ("Susco")
