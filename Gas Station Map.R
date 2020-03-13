@@ -100,3 +100,14 @@ html_nodes(".iframed-app__iframe") %>% html_text()
 ### IRPC Public Company Limited (IRPC)
 ### PTG Energy Pulic Company Limited (PTG)
 ### Susco Public Company Limited ("Susco")
+library(rvest)
+url <- c("https://en.wikipedia.org/wiki/List_of_districts_of_Thailand")
+webpage <- read_html(url, encoding = "UTF-8") %>%
+html_node(".mw-parser-output , tr:nth-child(1) td") %>% html_table()
+
+library(httr)
+library(XML)
+r <- GET(url)
+doc <- readHTMLTable(doc = content(r, "text"))
+
+library(ggmap)
