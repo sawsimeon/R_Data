@@ -991,4 +991,35 @@ history <- model %>% fit_generator(
 )
 
 
-#### page 229 of 341
+library(keras)
+
+seq_model <- keras_model_sequential() %>% 
+layer_dense(units = 32, activation = "relu", input_shape = c(64)) %>% 
+layer_dense(units  = 32, activation = "relu") %>% 
+layer_dense(units = 10, activation = "softmax")
+
+input_tensor <- layer_input(shape = c(64))
+
+output_tensor <- input_tensor %>% 
+layer_dense(units = 32, activation = "relu") %>% 
+layer_dense(units = 32, activation = "relu") %>% 
+layer_dense(units = 10, activation = "softmax")
+
+model <- keras_model(input_tensor, output_tensor)
+
+summary(model)
+
+unrelated_input <- layer_input(shape = c(64))
+
+
+model %>% compile(
+    optimizer = "rmsprop",
+    loss = "categorical_crossentropy"
+)
+
+x_train <- array(runif(1000 * 64), dim = c(1000, 64))
+y_train <- array(runif(1000 * 10), dim = c(1000, 10))
+
+model %>% fit(x_train, y_train, epochs = 10, batch_size = 128)
+
+model %>% evaluate(x_train, y_train)
