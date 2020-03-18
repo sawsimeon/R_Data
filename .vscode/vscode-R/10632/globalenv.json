@@ -1,0 +1,1 @@
+{"answer_vocabulary_size":{"class":["numeric"],"type":"double","length":1,"str":"num 500"},"text_vocabulary_size":{"class":["numeric"],"type":"double","length":1,"str":"num 10000"},"ques_vocabulary_size":{"class":["numeric"],"type":"double","length":1,"str":"num 10000"}}

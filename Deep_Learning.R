@@ -1023,3 +1023,134 @@ y_train <- array(runif(1000 * 10), dim = c(1000, 10))
 model %>% fit(x_train, y_train, epochs = 10, batch_size = 128)
 
 model %>% evaluate(x_train, y_train)
+
+library(keras)
+
+text_vocabulary_size <- 10000
+ques_vocabulary_size <- 10000
+answer_vocabulary_size <- 500
+
+text_input <- layer_input(shape = list(NULL),
+dtype = "int32", name = "text")
+encoded_text <- text_input %>% 
+layer_embedding(input_dim = 64, output_dim = text_vocabulary_size) %>% 
+layer_lstm(units = 32)
+
+question_input <- layer_input(shape = list(NULL), 
+dtype = "int32", name = "question")
+
+encoded_question <- question_input %>% 
+layer_embedding(input_dim = 32, output_dim = ques_vocabulary_size) %>% 
+layer_lstm(units = 16)
+
+concatenated <- layer_concatenate(list(encoded_text, encoded_question))
+
+answer <- concatenated %>% layer_dense(units = answer_vocabulary_size, activation = "softmax")
+
+model <- keras_model(list(text_input, question_input), answer)
+model %>% compile(
+    optimizer = "rmsprop",
+    loss = "categorical_crossentropy",
+    metrics = c("acc")
+)
+
+
+num_samples <- 1000
+max_length <- 100
+
+random_matrix <- function(range, nrow, ncol) {
+    matrix(sample(range, size = nrow * ncol, replace  =  TRUE),
+    nrow = nrow, ncol = ncol)
+}
+
+text <- random_matrix(1:text_vocabulary_size, num_samples, max_length)
+
+question <- random_matrix(1:ques_vocabulary_size num_samples, max_length)
+
+answers <- random_matrix(0:1, num_samples, answer_vocabulary_size)
+
+model %>% fit(
+    list(text, question), answers, 
+    epochs = 10, batch_size = 128
+)
+
+model %>% fit(
+    list(text = text, question = question), answers,
+    epochs = 10, batch_size = 128
+)
+
+library(keras)
+
+vocabulary_size <- 50000
+num_income_groups <- 10
+
+posts_input <- layer_input(shape = list(NULL),
+dtype = "int32", name = "posts")
+
+embedded_posts <- posts_input %>% 
+layer_embedding(input_dim = 256, output_dim = vocabulary_size)
+
+base_model <- embedded_posts %>% 
+layer_conv_1d(filters = 128, kernel_size = 5, activation = "relu") %>% 
+layer_max_pooling_1d(pool_size = 5) %>% 
+layer_conv_1d(filters = 256, kernel_size = 5, activation = "relu") %>%
+layer_conv_1d(filters = 256, kernel_size = 5, activation = "relu") %>% 
+layer_max_pooling_1d(pool_size = 5) %>% 
+layer_conv_1d(filters = 256, kernel_size = 5, activaiton = "relu") %>% 
+layer_conv_1d(filters = 256, kernel_size = 5, activation = "relu") %>% 
+layer_global_max_pooling_1d() %>% 
+layer_dense(units = 128, activaiton = "relu")
+
+age_prediction <- base_model %>% 
+layer_dense(units = 1, name = "age")
+
+income_prediction <- base_model %>% 
+layer_dense(num(income_groups, activation = "softmax", name = "income")
+gender_prediction <- base_model %>% 
+layer_dense(num_income_groups, activation = "softmax", name = "income")
+model <- keras_model(
+    post_input,
+    list(age_prediction, income_prediction, gender_prediction)
+)
+
+model %>% compile(
+    optimizer = "rmsprop",
+    loss = c("mse", "categorical_crossentropy", "binary_crossentropy")
+)
+
+model %>% compile(
+    optimizer = "rmsprop",
+    loss = list9
+    age = "mse",
+    income = "categorical_crossentropy",
+    gender = "binary_crosssentropy"
+)
+)
+
+model %>% compile(
+    optimizer = "rmsprop",
+    loss = c("mse", "categorical_crossentropy", "binary_crossentropy"),
+    los_weights = c(0.25, 1, 10)
+)
+
+model %>% compile(
+    optimizer = "rmsprop",
+    loss = list(
+        age = "mse",
+        income = "categorical_crossentropy",
+        gender = "binary_crossentropy"
+    ),
+    loss_weight = list(
+        age = 0.25, 
+        income = 1,
+        gender = 10
+    )
+)
+
+model %>% fit(
+    posts, list(age_targets, income_targets, gender_)
+)
+### Page 250/341
+
+
+
