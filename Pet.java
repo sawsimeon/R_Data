@@ -16,4 +16,10 @@ public class Pet {
         String petResponse = "OK!! OK!! " +aWord;
         return petResponse;
     }
+
+    public int age() {
+        int age = 9
+        return age;
+    }
 }
+
